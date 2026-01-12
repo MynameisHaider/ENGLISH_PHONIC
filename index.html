@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonics Master - Large Display Mode</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --primary: #1e272e;
+            --accent: #ef5777;
+            --blue: #0fbcf9;
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg-gradient);
+            overflow: hidden;
+        }
+
+        /* Sidebar - Thora chota lekin text wazeh */
+        #sidebar {
+            width: 250px;
+            background: rgba(30, 39, 46, 0.95);
+            padding: 20px;
+            overflow-y: auto;
+            color: white;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+        }
+
+        .suffix-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #485460;
+            border-radius: 12px;
+            background: transparent;
+            color: #d2dae2;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .suffix-btn:hover, .suffix-btn.active {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
+            transform: scale(1.05);
+        }
+
+        /* Main Display - Isko bara rakha hai */
+        #main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px;
+        }
+
+        #canvas {
+            position: relative;
+            width: 800px; /* Bara canvas */
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .center-cloud {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 100px;
+            font-size: 4rem; /* Bohat bara font door se dekhne ke liye */
+            font-weight: 900;
+            color: var(--primary);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            z-index: 10;
+            border: 6px solid var(--blue);
+        }
+
+        .root-node {
+            position: absolute;
+            background: var(--glass);
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 2.2rem; /* Bara root word */
+            font-weight: bold;
+            color: var(--primary);
+            border: 3px solid var(--blue);
+            z-index: 20;
+            transition: 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .root-node:hover {
+            background: var(--accent);
+            color: white;
+            border-color: white;
+            transform: scale(1.2);
+        }
+
+        .line {
+            position: absolute;
+            height: 4px;
+            background: var(--blue);
+            opacity: 0.3;
+            transform-origin: left center;
+            z-index: 1;
+        }
+
+        /* Result Panel - Door se wazeh nazar aaye */
+        .result-panel {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-bottom: 8px solid var(--accent);
+        }
+
+        .full-word-display {
+            font-size: 3.5rem; /* Bohat bara result */
+            font-weight: 800;
+            color: var(--accent);
+            margin: 0;
+        }
+
+        .hint { font-size: 1.2rem; color: #808e9b; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2 style="text-align: center; border-bottom: 2px solid #485460; padding-bottom: 10px;">Suffixes</h2>
+    <div id="btn-list"></div>
+</div>
+
+<div id="main">
+    <div id="canvas">
+        <div class="center-cloud" id="active-suffix">...</div>
+    </div>
+
+    <div class="result-panel">
+        <p class="hint">Combined Word:</p>
+        <h1 id="full-word" class="full-word-display">Hover a Word</h1>
+    </div>
+</div>
+
+<script>
+    const wordData = [
+        { suffix: "ture", roots: ["Pic", "Na", "Fu", "Cap", "Lec", "Cul", "Mix", "Fea"] },
+        { suffix: "tion", roots: ["Ac", "Sta", "Dic", "Mo", "Op", "Fic", "Educa"] },
+        { suffix: "ly", roots: ["Slow", "Quick", "Kind", "Bad", "Happi", "Safe"] },
+        { suffix: "ment", roots: ["Pay", "Move", "Agree", "Enjoy", "Govern", "State"] },
+        { suffix: "ness", roots: ["Kind", "Dark", "Happy", "Sad", "Weak", "Fit"] },
+        { suffix: "less", roots: ["Help", "Hope", "Care", "Fear", "Home", "End"] },
+        { suffix: "ful", roots: ["Beauti", "Help", "Care", "Wonder", "Joy", "Pain"] },
+        { suffix: "able", roots: ["Read", "Comfort", "Suit", "Cap", "Eat"] },
+        { suffix: "ing", roots: ["Play", "Read", "Sing", "Walk", "Cook", "Runn"] },
+        { suffix: "ed", roots: ["Play", "Walk", "Look", "Jump", "Cook"] },
+        { suffix: "ous", roots: ["Danger", "Fam", "Joy", "Nerv", "Poison"] },
+        { suffix: "ive", roots: ["Act", "Creat", "Nat", "Expens", "Talkat"] },
+        { suffix: "ist", roots: ["Art", "Dent", "Typ", "Solo", "Piano"] },
+        { suffix: "er", roots: ["Teach", "Play", "Sing", "Danc", "Bak", "Farm"] },
+        { suffix: "est", roots: ["Bigg", "Small", "Fast", "Long", "Tall"] },
+        { suffix: "ish", roots: ["Child", "Self", "Pink", "Book", "Fool"] },
+        { suffix: "ship", roots: ["Friend", "Hard", "Owner", "Member", "Champion"] },
+        { suffix: "ance", roots: ["Perform", "Allow", "Assist", "Guid", "Import"] },
+        { suffix: "ence", roots: ["Differ", "Sil", "Pres", "Depend", "Viol"] },
+        { suffix: "ity", roots: ["Abil", "Activ", "Real", "Pur", "Clar"] }
+    ];
+
+    const btnList = document.getElementById('btn-list');
+    const suffixDisplay = document.getElementById('active-suffix');
+    const fullWordDisplay = document.getElementById('full-word');
+    const canvas = document.getElementById('canvas');
+
+    function render(index) {
+        const item = wordData[index];
+        suffixDisplay.innerText = item.suffix;
+        fullWordDisplay.innerText = "Hover a Word";
+        
+        document.querySelectorAll('.root-node, .line').forEach(el => el.remove());
+        document.querySelectorAll('.suffix-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+
+        const radius = 240; // Spacing barha di
+        const centerX = canvas.offsetWidth / 2;
+        const centerY = canvas.offsetHeight / 2;
+
+        item.roots.forEach((root, i) => {
+            const angle = (i / item.roots.length) * (Math.PI * 2);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            const line = document.createElement('div');
+            line.className = 'line';
+            line.style.width = radius + "px";
+            line.style.left = centerX + "px";
+            line.style.top = centerY + "px";
+            line.style.transform = `rotate(${angle}rad)`;
+            canvas.appendChild(line);
+
+            const node = document.createElement('div');
+            node.className = 'root-node';
+            node.innerText = root;
+            node.style.left = `calc(50% + ${x}px - 60px)`;
+            node.style.top = `calc(50% + ${y}px - 30px)`;
+            
+            node.onmouseenter = () => {
+                fullWordDisplay.innerText = root + item.suffix;
+                line.style.opacity = "1";
+                line.style.background = "var(--accent)";
+            };
+            node.onmouseleave = () => {
+                fullWordDisplay.innerText = "Hover a Word";
+                line.style.opacity = "0.3";
+                line.style.background = "var(--blue)";
+            };
+            
+            canvas.appendChild(node);
+        });
+    }
+
+    wordData.forEach((item, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'suffix-btn';
+        btn.innerText = "-" + item.suffix;
+        btn.onclick = () => render(i);
+        btnList.appendChild(btn);
+    });
+
+    render(0);
+</script>
+</body>
+</html>
