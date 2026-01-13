@@ -189,36 +189,48 @@
 </div>
 
 <script>
-    const wordData = [
-        { suffix: "ture", roots: ["Pic", "Na", "Fu", "Cap", "Lec", "Cul", "Mix", "Fea"] },
-        { suffix: "tion", roots: ["Ac", "Sta", "Dic", "Mo", "Op", "Fic", "Educa"] },
-        { suffix: "ly", roots: ["Slow", "Quick", "Kind", "Bad", "Happi", "Safe"] },
-        { suffix: "ment", roots: ["Pay", "Move", "Agree", "Enjoy", "Govern", "State"] },
-        { suffix: "ness", roots: ["Kind", "Dark", "Happy", "Sad", "Weak", "Fit"] },
-        { suffix: "less", roots: ["Help", "Hope", "Care", "Fear", "Home", "End"] },
-        { suffix: "ful", roots: ["Beauti", "Help", "Care", "Wonder", "Joy", "Pain"] },
-        { suffix: "able", roots: ["Read", "Comfort", "Suit", "Cap", "Eat"] },
-        { suffix: "ing", roots: ["Play", "Read", "Sing", "Walk", "Cook", "Runn"] },
-        { suffix: "ed", roots: ["Play", "Walk", "Look", "Jump", "Cook"] },
-        { suffix: "ous", roots: ["Danger", "Fam", "Joy", "Nerv", "Poison"] },
-        { suffix: "ive", roots: ["Act", "Creat", "Nat", "Expens", "Talkat"] },
-        { suffix: "ist", roots: ["Art", "Dent", "Typ", "Solo", "Piano"] },
-        { suffix: "er", roots: ["Teach", "Play", "Sing", "Danc", "Bak", "Farm"] },
-        { suffix: "est", roots: ["Bigg", "Small", "Fast", "Long", "Tall"] },
-        { suffix: "ish", roots: ["Child", "Self", "Pink", "Book", "Fool"] },
-        { suffix: "ship", roots: ["Friend", "Hard", "Owner", "Member", "Champion"] },
-        { suffix: "ance", roots: ["Perform", "Allow", "Assist", "Guid", "Import"] },
-        { suffix: "ence", roots: ["Differ", "Sil", "Pres", "Depend", "Viol"] },
-        { suffix: "ity", roots: ["Abil", "Activ", "Real", "Pur", "Clar"] }
+    // 20 Suffixes with a "Pool" of 15-20 words each
+    const wordPool = [
+        { suffix: "ture", roots: ["Pic", "Na", "Fu", "Cap", "Lec", "Cul", "Mix", "Fea", "Ges", "Struc", "Ven", "Pas", "Depar", "Mois", "Scrip", "Tex"] },
+        { suffix: "tion", roots: ["Ac", "Sta", "Dic", "Mo", "Op", "Fic", "Educa", "Na", "Por", "Mo", "Sec", "Lo", "Op", "Ac", "Cap", "Inven"] },
+        { suffix: "ly", roots: ["Slow", "Quick", "Kind", "Bad", "Happi", "Safe", "Loud", "Soft", "Brave", "Final", "Glad", "Near", "Clear", "Real"] },
+        { suffix: "ment", roots: ["Pay", "Move", "Agree", "Enjoy", "Govern", "State", "Argu", "Develop", "Treat", "Invest", "Adjust", "Amuse"] },
+        { suffix: "ness", roots: ["Kind", "Dark", "Happy", "Sad", "Weak", "Fit", "Great", "Bright", "Ill", "Cold", "Sweet", "Fair", "Fresh"] },
+        { suffix: "less", roots: ["Help", "Hope", "Care", "Fear", "Home", "End", "Harm", "Cloud", "Sleep", "Wire", "Taste", "Leaf", "Sun"] },
+        { suffix: "ful", roots: ["Beauti", "Help", "Care", "Wonder", "Joy", "Pain", "Thank", "Power", "Grace", "Play", "Color", "Hope"] },
+        { suffix: "able", roots: ["Read", "Comfort", "Suit", "Cap", "Eat", "Wash", "Love", "Enjoy", "Break", "Tax", "Fold", "Pay"] },
+        { suffix: "ing", roots: ["Play", "Read", "Sing", "Walk", "Cook", "Runn", "Swimm", "Danc", "Jump", "Fly", "Draw", "Sleep", "Talk"] },
+        { suffix: "ed", roots: ["Play", "Walk", "Look", "Jump", "Cook", "Wait", "Help", "Start", "Call", "Fix", "Wash", "Open"] },
+        { suffix: "ous", roots: ["Danger", "Fam", "Joy", "Nerv", "Poison", "Mountain", "Marvel", "Furi", "Glori", "Humor", "Vigor"] },
+        { suffix: "ive", roots: ["Act", "Creat", "Nat", "Expens", "Talkat", "Posit", "Relat", "Detect", "Protect", "Select", "Adopt"] },
+        { suffix: "ist", roots: ["Art", "Dent", "Typ", "Solo", "Piano", "Journal", "Tour", "Special", "Scien", "Novel", "Cycle"] },
+        { suffix: "er", roots: ["Teach", "Play", "Sing", "Danc", "Bak", "Farm", "Work", "Read", "Driv", "Paint", "Help", "Clean"] },
+        { suffix: "est", roots: ["Bigg", "Small", "Fast", "Long", "Tall", "Short", "High", "Old", "Young", "Bright", "Rich", "Cold"] },
+        { suffix: "ish", roots: ["Child", "Self", "Pink", "Book", "Fool", "Style", "Snap", "Tick", "Yellow", "Boy", "Girl"] },
+        { suffix: "ship", roots: ["Friend", "Hard", "Owner", "Member", "Champion", "Leader", "Partner", "Relation", "Scholar"] },
+        { suffix: "ance", roots: ["Perform", "Allow", "Assist", "Guid", "Import", "Appear", "Enter", "Distance", "Clear"] },
+        { suffix: "ence", roots: ["Differ", "Sil", "Pres", "Depend", "Viol", "Confid", "Audien", "Sci", "Sent"] },
+        { suffix: "ity", roots: ["Abil", "Activ", "Real", "Pur", "Clar", "Equal", "Major", "Public", "Safe", "Social", "Unit"] }
     ];
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 
     const btnList = document.getElementById('btn-list');
     const suffixDisplay = document.getElementById('active-suffix');
     const fullWordDisplay = document.getElementById('full-word');
     const canvas = document.getElementById('canvas');
 
+    // Randomize the order of Suffixes in sidebar
+    const shuffledSuffixes = shuffle([...wordPool]);
+
     function render(index) {
-        const item = wordData[index];
+        const item = shuffledSuffixes[index];
         suffixDisplay.innerText = item.suffix;
         fullWordDisplay.innerText = window.innerWidth > 768 ? "Hover a Word" : "Tap a Word";
         
@@ -230,8 +242,11 @@
         const centerX = canvas.offsetWidth / 2;
         const centerY = canvas.offsetHeight / 2;
 
-        item.roots.forEach((root, i) => {
-            const angle = (i / item.roots.length) * (Math.PI * 2);
+        // NEW LOGIC: Shuffle all words and pick ONLY the first 8
+        const randomEight = shuffle([...item.roots]).slice(0, 8);
+
+        randomEight.forEach((root, i) => {
+            const angle = (i / randomEight.length) * (Math.PI * 2);
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
 
@@ -249,7 +264,6 @@
             node.style.left = `calc(50% + ${x}px - 40px)`;
             node.style.top = `calc(50% + ${y}px - 20px)`;
             
-            // Highlight Function
             const highlight = () => {
                 fullWordDisplay.innerText = root + item.suffix;
                 line.style.opacity = "1";
@@ -266,16 +280,15 @@
                 node.style.color = "var(--primary)";
             };
 
-            // Touch support for Mobile & Hover for PC
             node.onmouseenter = highlight;
             node.onmouseleave = unhighlight;
-            node.onclick = highlight; // For mobile taps
+            node.onclick = highlight;
 
             canvas.appendChild(node);
         });
     }
 
-    wordData.forEach((item, i) => {
+    shuffledSuffixes.forEach((item, i) => {
         const btn = document.createElement('button');
         btn.className = 'suffix-btn';
         btn.innerText = "-" + item.suffix;
@@ -283,7 +296,6 @@
         btnList.appendChild(btn);
     });
 
-    window.addEventListener('resize', () => render(document.querySelector('.suffix-btn.active') ? wordData.findIndex(x => x.suffix === suffixDisplay.innerText) : 0));
     render(0);
 </script>
 </body>
